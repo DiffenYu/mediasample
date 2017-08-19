@@ -1,0 +1,7 @@
+cmake_minimum_required (VERSION 2.8)
+project (simpleEncoderX265BasedOnFFmpeg)
+find_library(AVFormat avformat)
+find_library(AVCodec avcodec)
+find_library(AVUtil avutil)
+add_executable (simpleEncoderX265BasedOnFFmpeg simpleEncoderX265BasedOnFFmpeg.cpp)
+target_link_libraries(simpleEncoderX265BasedOnFFmpeg "${AVFormat}" "${AVCodec}" "${AVUtil}")
