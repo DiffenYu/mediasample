@@ -1,0 +1,7 @@
+cmake_minimum_required (VERSION 2.8)
+project (simpleAudioEncoderBasedOnFFmpeg)
+find_library(AVFormat avformat)
+find_library(AVCodec avcodec)
+find_library(AVUtil avutil)
+add_executable (simpleAudioEncoderBasedOnFFmpeg simpleAudioEncoderBasedOnFFmpeg.cpp)
+target_link_libraries(simpleAudioEncoderBasedOnFFmpeg "${AVFormat}" "${AVCodec}" "${AVUtil}")
