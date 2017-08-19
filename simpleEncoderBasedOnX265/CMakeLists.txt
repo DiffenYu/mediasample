@@ -1,0 +1,5 @@
+cmake_minimum_required (VERSION 2.8)
+project (simpleEncoderBasedOnX265)
+find_library(X265_LIB x265)
+add_executable (simpleEncoderBasedOnX265 simpleEncoderBasedOnX265.cpp)
+target_link_libraries(simpleEncoderBasedOnX265 "${X265_LIB}")
