@@ -1,0 +1,5 @@
+cmake_minimum_required (VERSION 2.8)
+project (simpleEncoderBasedOnVPX)
+find_library(VPX_LIB vpx)
+add_executable (simpleEncoderBasedOnVPX simpleEncoderBasedOnVPX.cpp)
+target_link_libraries(simpleEncoderBasedOnVPX "${VPX_LIB}")
