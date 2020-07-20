@@ -1,0 +1,6 @@
+gflags
+glog
+opencv
+opencv_contrib
+opencv_install
+compile_commands.json
