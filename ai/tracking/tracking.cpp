@@ -15,6 +15,7 @@ using namespace cv;
         ( std::ostringstream() << std::dec << x ) ).str()
 
 DEFINE_string(input, "./sample_video.mp4", "input video");
+DEFINE_string(type, "KCF", "tracker types: BOOSTING, MIL, KCF, TLD, MEDIANFLOW, GOTURN, MOSSE, CSRT");
 DEFINE_int32(cameraid, -1, "camera id");
 DEFINE_int32(num_frames, 10, "number of frames to test");
 DEFINE_bool(show, false, "whether to show or not the result");
@@ -28,9 +29,7 @@ int main(int argc, char** argv)
     google::InitGoogleLogging("TRACKING");
     gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-    string trackerTypes[8] = { "BOOSTING", "MIL", "KCF", "TLD", "MEDIANFLOW", "GOTURN", "MOSSE", "CSRT" };
-
-    string trackerType = trackerTypes[2];
+    string trackerType = FLAGS_type;
     Ptr<Tracker> tracker;
 #if (CV_MAJOR_VERSION == 3 && CV_MINOR_VERSION < 3)
     {
