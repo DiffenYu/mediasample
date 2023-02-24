@@ -1,7 +1,6 @@
 #!/bin/bash
 
-usage()
-{
+usage() {
     echo "Usage:"
     echo "  ./build.sh ffmpeg"
     echo "  ./build.sh sample"
@@ -14,13 +13,11 @@ DST_DIR="$this/deps_dst"
 [[ ! -d $SRC_DIR ]] && mkdir $SRC_DIR
 [[ ! -d $DST_DIR ]] && mkdir $DST_DIR
 
-install_deps()
-{
+install_deps() {
     sudo -E yum install gcc gcc-c++ nasm yasm -y 
 }
 
-install_opus()
-{
+install_opus() {
     echo "Downloading opus-1.1..."
     wget -c http://downloads.xiph.org/releases/opus/opus-1.1.tar.gz
     tar -xvzf opus-1.1.tar.gz
@@ -33,8 +30,7 @@ install_opus()
     popd
 }
 
-install_x264()
-{
+install_x264() {
     echo "Downloading x264..."
     wget -c ftp://ftp.videolan.org/pub/videolan/x264/snapshots/x264-snapshot-20170531-2245-stable.tar.bz2
     tar -xvf x264-snapshot-20170531-2245-stable.tar.bz2
@@ -47,8 +43,7 @@ install_x264()
     popd
 }
 
-install_fdkaac()
-{
+install_fdkaac() {
     local VERSION="0.1.4"
     local SRC="fdk-aac-${VERSION}.tar.gz"
     local SRC_URL="http://sourceforge.net/projects/opencore-amr/files/fdk-aac/${SRC}/download"
@@ -72,8 +67,7 @@ install_fdkaac()
 
 }
 
-install_ffmpeg()
-{
+install_ffmpeg() {
     local VERSION="3.1.2"
     local DIR="ffmpeg-${VERSION}"
     local SRC="${DIR}.tar.bz2"
@@ -96,14 +90,13 @@ install_ffmpeg()
 
 }
 
-copy_libs()
-{
+
+copy_libs() {
     cp -p $SRC_DIR/lib/*.so.* $DST_DIR
     cp -p $SRC_DIR/lib/*.so $DST_DIR
 }
 
-ffmpeg()
-{
+ffmpeg() {
     install_deps
 
     pushd $SRC_DIR
@@ -117,8 +110,7 @@ ffmpeg()
     copy_libs
 }
 
-sample()
-{
+sample() {
     echo "Building sample..."
 }
 
