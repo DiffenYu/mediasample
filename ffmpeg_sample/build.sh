@@ -10,8 +10,10 @@ this=$(pwd)
 
 SRC_DIR="$this/deps_src"
 DST_DIR="$this/deps_dst"
+INSTALL_DIR="${this}/install"
 [[ ! -d $SRC_DIR ]] && mkdir $SRC_DIR
 [[ ! -d $DST_DIR ]] && mkdir $DST_DIR
+[[ ! -d ${INSTALL_DIR} ]] && mkdir $INSTALL_DIR
 
 install_deps() {
     sudo -E yum install gcc gcc-c++ nasm yasm -y 
@@ -91,6 +93,23 @@ install_ffmpeg() {
 }
 
 
+build_ffmpeg() {
+    local TAG="n4.4.3"
+    pushd ${SRC_DIR}
+    [[ ! -s "FFmpeg" ]] && git clone https://github.com/FFmpeg/FFmpeg.git
+    pushd FFmpeg
+    git checkout ${TAG}
+    ./configure \
+        --prefix=${INSTALL_DIR} \
+        --enable-shared \
+        --enable-asm
+
+    make -j$(nproc)
+    make install
+    popd
+    popd
+}
+
 copy_libs() {
     cp -p $SRC_DIR/lib/*.so.* $DST_DIR
     cp -p $SRC_DIR/lib/*.so $DST_DIR
@@ -121,7 +140,7 @@ if [[ $# -gt 0 ]]; then
             exit 0
             ;;
         ffmpeg )
-            ffmpeg
+            build_ffmpeg
             exit 0
             ;;
         sample )
