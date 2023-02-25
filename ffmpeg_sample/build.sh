@@ -3,6 +3,7 @@
 usage() {
     echo "Usage:"
     echo "  ./build.sh ffmpeg"
+    echo "  ./build.sh x264"
     echo "  ./build.sh sample"
 }
 
@@ -32,16 +33,19 @@ install_opus() {
     popd
 }
 
-install_x264() {
-    echo "Downloading x264..."
-    wget -c ftp://ftp.videolan.org/pub/videolan/x264/snapshots/x264-snapshot-20170531-2245-stable.tar.bz2
-    tar -xvf x264-snapshot-20170531-2245-stable.tar.bz2
+build_x264() {
+    local BRANCH="stable"
+    pushd ${SRC_DIR}
+    [[ ! -s "x264" ]] && git clone https://github.com/mirror/x264.git
+    pushd x264
+    git checkout ${BRANCH}
+    ./configure \
+        --prefix=${INSTALL_DIR} \
+        --enable-shared
 
-    echo "Building x264... "
-    pushd x264-snapshot-20170531-2245-stable
-    ./configure --prefix=$SRC_DIR --enable-shared
-    make -s V=0
+    make -j$(nproc)
     make install
+    popd
     popd
 }
 
@@ -99,10 +103,13 @@ build_ffmpeg() {
     [[ ! -s "FFmpeg" ]] && git clone https://github.com/FFmpeg/FFmpeg.git
     pushd FFmpeg
     git checkout ${TAG}
+    PKG_CONFIG_PATH=${INSTALL_DIR}/lib/pkgconfig \
     ./configure \
         --prefix=${INSTALL_DIR} \
         --enable-shared \
-        --enable-asm
+        --enable-asm \
+        --enable-libx264 \
+        --enable-gpl
 
     make -j$(nproc)
     make install
@@ -141,6 +148,10 @@ if [[ $# -gt 0 ]]; then
             ;;
         ffmpeg )
             build_ffmpeg
+            exit 0
+            ;;
+        x264 )
+            build_x264
             exit 0
             ;;
         sample )
