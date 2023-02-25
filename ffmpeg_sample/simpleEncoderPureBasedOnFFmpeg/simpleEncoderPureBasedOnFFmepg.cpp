@@ -14,15 +14,38 @@ extern "C" {
 #define TEST_H264 1
 #define TEST_HEVC 0
 
+static void encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
+        FILE *outfile)
+{
+    int ret;
+
+    /* send the frame to the encoder */
+    if (frame)
+        printf("Send frame %3" PRId64 "\n", frame->pts);
+
+    ret = avcodec_send_frame(enc_ctx, frame);
+    if (ret < 0) {
+        fprintf(stderr, "Error sending a frame for encoding\n");
+        exit(1);
+    }
+
+    while (ret >= 0) {
+        ret = avcodec_receive_packet(enc_ctx, pkt);
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+            return;
+        else if (ret < 0) {
+            fprintf(stderr, "Error during encoding\n");
+            exit(1);
+        }
+
+        printf("Write packet %3" PRId64 " (size=%5d)\n", pkt->pts, pkt->size);
+        fwrite(pkt->data, 1, pkt->size, outfile);
+        av_packet_unref(pkt);
+    }
+}
+
 int main()
 {
-    int i, ret, got_output;
-    FILE* fp_in;
-    FILE* fp_out;
-    AVFrame* pFrame;
-    AVPacket pkt;
-    int y_size;
-
     char filename_in[] = "../clips/bbc_640x480_374.yuv";
 
 #if TEST_H264
@@ -36,8 +59,6 @@ int main()
     int in_w = 640;
     int in_h = 480;
     int framecnt = 100;
-
-    avcodec_register_all();
 
     AVCodec* pCodec = avcodec_find_encoder(codec_id);
     if (!pCodec) {
@@ -69,7 +90,7 @@ int main()
         return -1;
     }
 
-    pFrame = av_frame_alloc();
+    AVFrame* pFrame = av_frame_alloc();
     if (!pFrame) {
         printf("Could not allocate video frame\n");
         return -1;
@@ -79,34 +100,41 @@ int main()
     pFrame->width = pCodecCtx->width;
     pFrame->height = pCodecCtx->height;
 
-    ret = av_image_alloc(pFrame->data, pFrame->linesize, pCodecCtx->width, pCodecCtx->height, pCodecCtx->pix_fmt, 16);
-
+    int ret = av_frame_get_buffer(pFrame, 0);
     if (ret < 0) {
-        printf("Could not allocate raw picture buffer\n");
+        printf("Could not allocate the video frame data\n");
         return -1;
     }
 
     //input raw data
-    fp_in = fopen(filename_in, "rb");
+    FILE* fp_in = fopen(filename_in, "rb");
     if (!fp_in) {
         printf("Could not open %s\n", filename_in);
         return -1;
     }
 
     //Output bitstream
-    fp_out = fopen(filename_out, "wb");
+    FILE* fp_out = fopen(filename_out, "wb");
     if (!fp_out) {
         printf("Could not open %s\n", filename_out);
         return -1;
     }
 
-    y_size = pCodecCtx->width * pCodecCtx->height;
+    AVPacket* pkt = av_packet_alloc();
+    if (!pkt) {
+        printf("Could not allocate packet\n");
+        return -1;
+    }
 
     //Encode
-    for (i = 0; i < framecnt; ++i) {
-        av_init_packet(&pkt);
-        pkt.data = NULL;
-        pkt.size = 0;
+    int y_size = pCodecCtx->width * pCodecCtx->height;
+    for (int i = 0; i < framecnt; ++i) {
+        /* make sure the frame data is writable */
+        ret = av_frame_make_writable(pFrame);
+        if (ret < 0) {
+            printf("error in frame make writable\n");
+            return -1;
+        }
         //Read raw YUV data
         if (fread(pFrame->data[0], 1, y_size, fp_in)     <= 0 ||
             fread(pFrame->data[1], 1, y_size / 4, fp_in) <= 0 ||
@@ -116,40 +144,16 @@ int main()
             break;
         }
         pFrame->pts = i;
-        ret = avcodec_encode_video2(pCodecCtx, &pkt, pFrame, &got_output);
-        if (ret < 0) {
-            printf("Error encoding frame\n");
-            return -1;
-        }
-        
-        if (got_output) {
-            printf("Succeed to encode frame: %5d\tsize:%5d\n", framecnt, pkt.size);
-            framecnt++;
-            fwrite(pkt.data, 1, pkt.size, fp_out);
-            av_free_packet(&pkt);
-        }
+        encode(pCodecCtx, pFrame, pkt, fp_out);
     }
 
-    //Flush Encoder
-    for (got_output = 1; got_output; i++) {
-        ret = avcodec_encode_video2(pCodecCtx, &pkt, NULL, &got_output);
-        if (ret < 0) {
-            printf("Error encoding frame\n");
-            return -1;
-        }
+    encode(pCodecCtx, NULL, pkt, fp_out);
 
-        if (got_output) {
-            printf("Flush encoder: Succeed to encode 1 frame!\tsize:%5d\n", pkt.size);
-            fwrite(pkt.data, 1, pkt.size, fp_out);
-            av_free_packet(&pkt);
-        }
-    }
 
     fclose(fp_out);
-    avcodec_close(pCodecCtx);
-    av_free(pCodecCtx);
-    av_freep(&pFrame->data[0]);
+    avcodec_free_context(&pCodecCtx);
     av_frame_free(&pFrame);
+    av_packet_free(&pkt);
 
     return 0;
 }
