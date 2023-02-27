@@ -46,7 +46,7 @@ static void encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
 
 int main()
 {
-    char filename_in[] = "../clips/bbc_640x480_374.yuv";
+    char filename_in[] = "../640x480_camera_i420.yuv";
 
 #if TEST_H264
     AVCodecID codec_id = AV_CODEC_ID_H264;
