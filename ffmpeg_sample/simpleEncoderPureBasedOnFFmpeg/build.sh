@@ -1,10 +1,9 @@
 #!/bin/bash
 
-export PKG_CONFIG_PATH=../../install/lib/pkgconfig:${PKG_CONFIG_PATH}
 mkdir build
 pushd build
 cmake ..
-make -j8
+make -j$(nproc)
 popd
 
 # set the LD_LIBARAY_PATH to make sure use those libs you build when you run
