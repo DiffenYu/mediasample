@@ -1,0 +1,2 @@
+# ignore build, a/build, a/b/build
+**/build
