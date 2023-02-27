@@ -14,6 +14,8 @@ extern "C" {
 #define TEST_H264 1
 #define TEST_HEVC 0
 
+const char* codec_name = "libx264";
+
 static void encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
         FILE *outfile)
 {
@@ -60,7 +62,9 @@ int main()
     int in_h = 480;
     int framecnt = 100;
 
-    AVCodec* pCodec = avcodec_find_encoder(codec_id);
+    // You can find encoder by name (list in allcodecs.c, search the corresponding name) or by codec_id.
+    //AVCodec* pCodec = avcodec_find_encoder(codec_id);
+    AVCodec* pCodec = avcodec_find_encoder_by_name(codec_name);
     if (!pCodec) {
         printf("Codec not found\n");
         return -1;
