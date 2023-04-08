@@ -2,7 +2,7 @@
 
 usage() {
     echo "Usage:"
-    echo "  ./build.sh ffmpeg [cuda] [debug]"
+    echo "  ./build.sh ffmpeg [x264] [cuda] [qsv] [debug]"
     echo "  ./build.sh x264"
     echo "  ./build.sh sample"
 }
@@ -100,11 +100,8 @@ install_ffmpeg() {
 build_ffmpeg() {
     local config_params=""
     config_params="${config_params} --prefix=${INSTALL_DIR}"
-    config_params="${config_params} --prefix=${INSTALL_DIR}"
-    config_params="${config_params} --prefix=${INSTALL_DIR}"
     config_params="${config_params} --enable-shared"
     config_params="${config_params} --enable-asm"
-    config_params="${config_params} --enable-libx264"
     config_params="${config_params} --enable-gpl"
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -113,6 +110,10 @@ build_ffmpeg() {
                 config_params="${config_params} --enable-debug=3"
                 config_params="${config_params} --disable-small"
                 config_params="${config_params} --disable-stripping"
+
+                ;;
+            x264)
+                config_params="${config_params} --enable-libx264"
 
                 ;;
             cuda)
@@ -125,6 +126,14 @@ build_ffmpeg() {
                 config_params="${config_params} --enable-cuvid"
                 config_params="${config_params} --extra-cflags=-I/usr/local/cuda/include"
                 config_params="${config_params} --extra-ldflags=-L/usr/local/cuda/lib64"
+
+                ;;
+            qsv)
+                config_params="${config_params} --enable-libmfx"
+                config_params="${config_params} --enable-encoder=h264_qsv"
+                config_params="${config_params} --enable-decoder=h264_qsv"
+                config_params="${config_params} --enable-encoder=hevc_qsv"
+                config_params="${config_params} --enable-decoder=hevc_qsv"
 
                 ;;
             * )
@@ -153,37 +162,6 @@ build_ffmpeg() {
     popd
     popd
 }
-
-build_ffmpeg_debug() {
-    local TAG="n4.4.3"
-    pushd ${SRC_DIR}
-    [[ ! -s "FFmpeg" ]] && git clone https://github.com/FFmpeg/FFmpeg.git
-    pushd FFmpeg
-    cur_branch=$(git rev-parse --abbrev-ref HEAD)
-    echo ${cur_branch}
-    if [[ ${cur_branch} =~ ${TAG} ]]; then
-        echo "find the cur branch"
-        exit
-    fi
-    #git checkout -b ${TAG} ${TAG}
-    PKG_CONFIG_PATH=${INSTALL_DIR}/lib/pkgconfig \
-    ./configure \
-        --prefix=${INSTALL_DIR} \
-        --enable-shared \
-        --enable-asm \
-        --enable-libx264 \
-        --enable-gpl \
-        --disable-optimizations \
-        --enable-debug=3 \
-        --disable-small \
-        --disable-stripping
-
-    make -j$(nproc)
-    make install
-    popd
-    popd
-}
-
 
 copy_libs() {
     cp -p $SRC_DIR/lib/*.so.* $DST_DIR
