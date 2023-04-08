@@ -2,7 +2,7 @@
 
 usage() {
     echo "Usage:"
-    echo "  ./build.sh ffmpeg"
+    echo "  ./build.sh ffmpeg [cuda] [debug]"
     echo "  ./build.sh x264"
     echo "  ./build.sh sample"
 }
@@ -184,45 +184,6 @@ build_ffmpeg_debug() {
     popd
 }
 
-
-build_ffmpeg_cuda_debug() {
-    local TAG="n4.4.3"
-    pushd ${SRC_DIR}
-    [[ ! -s "FFmpeg" ]] && git clone https://github.com/FFmpeg/FFmpeg.git
-    pushd FFmpeg
-    cur_branch=$(git rev-parse --abbrev-ref HEAD)
-    echo ${cur_branch}
-    if [[ ${cur_branch} =~ ${TAG} ]]; then
-        echo "find the cur branch"
-        exit
-    fi
-    #git checkout -b ${TAG} ${TAG}
-    PKG_CONFIG_PATH=${INSTALL_DIR}/lib/pkgconfig \
-    ./configure \
-        --prefix=${INSTALL_DIR} \
-        --enable-shared \
-        --enable-asm \
-        --enable-libx264 \
-        --enable-gpl \
-        --disable-optimizations \
-        --enable-debug=3 \
-        --disable-small \
-        --disable-stripping \
-        --enable-nonfree \
-        --enable-ffnvcodec \
-        --enable-encoder=h264_nvenc \
-        --enable-hwaccel=h264_nvdec \
-        --enable-nvenc \
-        --enable-nvdec \
-        --enable-cuda --enable-cuvid \
-        --extra-cflags=-I/usr/local/cuda/include \
-        --extra-ldflags=-L/usr/local/cuda/lib64
-
-    make -j$(nproc)
-    make install
-    popd
-    popd
-}
 
 copy_libs() {
     cp -p $SRC_DIR/lib/*.so.* $DST_DIR
