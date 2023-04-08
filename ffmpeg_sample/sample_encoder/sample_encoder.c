@@ -7,6 +7,7 @@
 
 const char* codec_name = "libx264";
 /*const char* codec_name = "h264_nvenc";*/
+/*const char* codec_name = "h264_qsv";*/
 
 static void encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
         FILE *outfile)
@@ -48,7 +49,7 @@ int main(int argc, char** argv)
 {
     av_log_set_level(AV_LOG_DEBUG);
     if (argc <= 4) {
-        fprintf(stderr, "Usage: %s <input file> <output file> input_width input_height\n"
+        fprintf(stderr, "Usage: %s <input file> <output file> input_width input_height format[yuv420p|nv12]\n"
                 "And check your input file is raw yuv file.\n", argv[0]);
         exit(0);
     }
@@ -56,7 +57,7 @@ int main(int argc, char** argv)
     const char* filename_out = argv[2];
     int in_w = atoi(argv[3]);
     int in_h = atoi(argv[4]);
-    int framecnt = 100;
+    int framecnt = 50;
 
     // You can find encoder by name (list in allcodecs.c, search the corresponding name) or by codec_id.
     //AVCodec* pCodec = avcodec_find_encoder(codec_id);
@@ -72,12 +73,22 @@ int main(int argc, char** argv)
         return -1;
     }
 
+    const char* format = argv[5];
+    if (strcmp(format, "yuv420p") == 0) {
+        printf("use yuv420p format\n");
+        pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
+    } else if (strcmp(format, "nv12") == 0) {
+        printf("use nv12 format\n");
+        pCodecCtx->pix_fmt = AV_PIX_FMT_NV12;
+    } else {
+        pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
+    }
+
     pCodecCtx->bit_rate = 800000;
     pCodecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
     pCodecCtx->codec_id = AV_CODEC_ID_H264;
     pCodecCtx->width = in_w;
     pCodecCtx->height = in_h;
-    pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
 
     pCodecCtx->framerate.num = 15;
     pCodecCtx->framerate.den = 1;
@@ -143,12 +154,21 @@ int main(int argc, char** argv)
             return -1;
         }
         //Read raw YUV data
-        if (fread(pFrame->data[0], 1, y_size, fp_in)     <= 0 ||
-            fread(pFrame->data[1], 1, y_size / 4, fp_in) <= 0 ||
-            fread(pFrame->data[2], 1, y_size / 4, fp_in) <= 0)
-            return -1;
-        else if (feof(fp_in)) {
-            break;
+        if (pCodecCtx->pix_fmt == AV_PIX_FMT_YUV420P) {
+            if (fread(pFrame->data[0], 1, y_size, fp_in)     <= 0 ||
+                    fread(pFrame->data[1], 1, y_size / 4, fp_in) <= 0 ||
+                    fread(pFrame->data[2], 1, y_size / 4, fp_in) <= 0) {
+                return -1;
+            } else if (feof(fp_in)) {
+                break;
+            }
+        } else if (pCodecCtx->pix_fmt == AV_PIX_FMT_NV12) {
+            if (fread(pFrame->data[0], 1, y_size, fp_in)     <= 0 ||
+                    fread(pFrame->data[1], 1, y_size / 2, fp_in) <= 0) {
+                return -1;
+            } else if (feof(fp_in)) {
+                break;
+            }
         }
         pFrame->pts = i;
         encode(pCodecCtx, pFrame, pkt, fp_out);
