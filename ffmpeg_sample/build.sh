@@ -98,18 +98,125 @@ install_ffmpeg() {
 
 
 build_ffmpeg() {
+    local config_params=""
+    config_params="${config_params} --prefix=${INSTALL_DIR}"
+    config_params="${config_params} --prefix=${INSTALL_DIR}"
+    config_params="${config_params} --prefix=${INSTALL_DIR}"
+    config_params="${config_params} --enable-shared"
+    config_params="${config_params} --enable-asm"
+    config_params="${config_params} --enable-libx264"
+    config_params="${config_params} --enable-gpl"
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            debug)
+                config_params="${config_params} --disable-optimizations"
+                config_params="${config_params} --enable-debug=3"
+                config_params="${config_params} --disable-small"
+                config_params="${config_params} --disable-stripping"
+
+                ;;
+            cuda)
+                config_params="${config_params} --enable-ffnvcodec"
+                config_params="${config_params} --enable-encoder=h264_nvenc"
+                config_params="${config_params} --enable-hwaccel=h264_nvdec"
+                config_params="${config_params} --enable-nvenc"
+                config_params="${config_params} --enable-nvdec"
+                config_params="${config_params} --enable-cuda"
+                config_params="${config_params} --enable-cuvid"
+                config_params="${config_params} --extra-cflags=-I/usr/local/cuda/include"
+                config_params="${config_params} --extra-ldflags=-L/usr/local/cuda/lib64"
+
+                ;;
+            * )
+                echo "parameter: $1 is not supported"
+                ;;
+        esac
+        shift
+    done
+    echo "${config_params}"
+
+    local tag="n4.4.3"
+    pushd ${SRC_DIR}
+    if [[ ! -s "FFmpeg" ]]; then
+        git clone https://github.com/FFmpeg/FFmpeg.git
+        pushd FFmpeg
+        git checkout -b ${tag} ${tag}
+    else
+        pushd FFmpeg
+    fi
+
+    PKG_CONFIG_PATH=${INSTALL_DIR}/lib/pkgconfig \
+    ./configure ${config_params}
+
+    make -j$(nproc)
+    make install
+    popd
+    popd
+}
+
+build_ffmpeg_debug() {
     local TAG="n4.4.3"
     pushd ${SRC_DIR}
     [[ ! -s "FFmpeg" ]] && git clone https://github.com/FFmpeg/FFmpeg.git
     pushd FFmpeg
-    git checkout ${TAG}
+    cur_branch=$(git rev-parse --abbrev-ref HEAD)
+    echo ${cur_branch}
+    if [[ ${cur_branch} =~ ${TAG} ]]; then
+        echo "find the cur branch"
+        exit
+    fi
+    #git checkout -b ${TAG} ${TAG}
     PKG_CONFIG_PATH=${INSTALL_DIR}/lib/pkgconfig \
     ./configure \
         --prefix=${INSTALL_DIR} \
         --enable-shared \
         --enable-asm \
         --enable-libx264 \
-        --enable-gpl
+        --enable-gpl \
+        --disable-optimizations \
+        --enable-debug=3 \
+        --disable-small \
+        --disable-stripping
+
+    make -j$(nproc)
+    make install
+    popd
+    popd
+}
+
+
+build_ffmpeg_cuda_debug() {
+    local TAG="n4.4.3"
+    pushd ${SRC_DIR}
+    [[ ! -s "FFmpeg" ]] && git clone https://github.com/FFmpeg/FFmpeg.git
+    pushd FFmpeg
+    cur_branch=$(git rev-parse --abbrev-ref HEAD)
+    echo ${cur_branch}
+    if [[ ${cur_branch} =~ ${TAG} ]]; then
+        echo "find the cur branch"
+        exit
+    fi
+    #git checkout -b ${TAG} ${TAG}
+    PKG_CONFIG_PATH=${INSTALL_DIR}/lib/pkgconfig \
+    ./configure \
+        --prefix=${INSTALL_DIR} \
+        --enable-shared \
+        --enable-asm \
+        --enable-libx264 \
+        --enable-gpl \
+        --disable-optimizations \
+        --enable-debug=3 \
+        --disable-small \
+        --disable-stripping \
+        --enable-nonfree \
+        --enable-ffnvcodec \
+        --enable-encoder=h264_nvenc \
+        --enable-hwaccel=h264_nvdec \
+        --enable-nvenc \
+        --enable-nvdec \
+        --enable-cuda --enable-cuvid \
+        --extra-cflags=-I/usr/local/cuda/include \
+        --extra-ldflags=-L/usr/local/cuda/lib64
 
     make -j$(nproc)
     make install
@@ -147,7 +254,8 @@ if [[ $# -gt 0 ]]; then
             exit 0
             ;;
         ffmpeg )
-            build_ffmpeg
+            shift
+            build_ffmpeg $@
             exit 0
             ;;
         x264 )
