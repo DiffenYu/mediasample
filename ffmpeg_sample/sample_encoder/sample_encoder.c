@@ -5,10 +5,8 @@
 #include <libavutil/imgutils.h>
 #include <libavutil/opt.h>
 
-#define TEST_H264 1
-#define TEST_HEVC 0
-
 const char* codec_name = "libx264";
+/*const char* codec_name = "h264_nvenc";*/
 
 static void encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
         FILE *outfile)
@@ -46,21 +44,18 @@ static void encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
     }
 }
 
-int main()
+int main(int argc, char** argv)
 {
     av_log_set_level(AV_LOG_DEBUG);
-    char filename_in[] = "./1280x720_test_i420.yuv";
-
-#if TEST_H264
-//    AVCodecID codec_id = AV_CODEC_ID_H264;
-    char filename_out[] = "out.h264";
-#else
-//    AVCodecID codec_id = AV_CODEC_ID_HEVC;
-//    char filename_out[] = "outbbc.hevc";
-#endif
-
-    int in_w = 1280;
-    int in_h = 720;
+    if (argc <= 4) {
+        fprintf(stderr, "Usage: %s <input file> <output file> input_width input_height\n"
+                "And check your input file is raw yuv file.\n", argv[0]);
+        exit(0);
+    }
+    const char* filename_in = argv[1];
+    const char* filename_out = argv[2];
+    int in_w = atoi(argv[3]);
+    int in_h = atoi(argv[4]);
     int framecnt = 100;
 
     // You can find encoder by name (list in allcodecs.c, search the corresponding name) or by codec_id.
