@@ -3,8 +3,10 @@
 #include <string.h>
 
 #include <libavcodec/avcodec.h>
+#include <libavutil/pixdesc.h>
 
 #define INBUF_SIZE 4096
+static int64_t timestamp = 0;
 
 static void write_yuv_to_file(AVFrame* frame, FILE* fp_out) {
     if (fp_out) {
@@ -32,6 +34,24 @@ static void write_yuv_to_file(AVFrame* frame, FILE* fp_out) {
             /*exit(1);*/
         /*}*/
         /*fflush(fp_out);*/
+    }
+}
+
+static void write_nv12_to_file(AVFrame* frame, FILE* fp_out) {
+    if (fp_out) {
+        for (int color_idx = 0; color_idx < 2; color_idx++) {
+            int width = frame->width;
+            int height = color_idx == 0 ? frame->height: frame->height/ 2;
+            uint8_t* ptr = frame->data[color_idx];
+            for (int ih = 0; ih < height; ih++) {
+                if (fwrite(ptr, 1, width, fp_out) <= 0) {
+                    fprintf(stderr, "Error write to file\n");
+                    exit(1);
+                }
+                ptr += frame->linesize[color_idx];
+            }
+            fflush(fp_out);
+        }
     }
 }
 
@@ -65,6 +85,8 @@ static void decode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt,
     char* filename = "dump_out";
     int ret;
 
+    /*dec_ctx->reordered_opaque = timestamp++;*/
+
     ret = avcodec_send_packet(dec_ctx, pkt);
     if (ret < 0) {
         fprintf(stderr, "Error sending a packet for decoding\n");
@@ -73,26 +95,34 @@ static void decode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt,
 
     while (ret >= 0) {
         ret = avcodec_receive_frame(dec_ctx, frame);
-        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
             return;
+        }
         else if (ret < 0) {
-            fprintf(stderr, "Error during decoding\n");
+            fprintf(stderr, "Error during decoding, ret = %d\n", ret);
             exit(1);
         }
 
         printf("saving frame %3d\n", dec_ctx->frame_number);
+        printf("output format is %s\n", av_get_pix_fmt_name(frame->format));
         fflush(stdout);
-        printf("frame->format = %d, frame->width = %d, frame->height = %d, frame->linesize[0] = %d\n", frame->format, frame->width, frame->height, frame->linesize[0]);
-        printf("frame->linesize[1] = %d, frame->linesize[2] = %d\n", frame->linesize[1], frame->linesize[2]);
+        /*printf("frame->format = %d, frame->width = %d, frame->height = %d, frame->linesize[0] = %d\n", frame->format, frame->width, frame->height, frame->linesize[0]);*/
+        /*printf("frame->linesize[1] = %d, frame->linesize[2] = %d\n", frame->linesize[1], frame->linesize[2]);*/
+        /*printf("frame->key_frame = %d\n", frame->key_frame);*/
 
         snprintf(buf, sizeof(buf), "%s_%dx%d_%d.yuv", filename, frame->width, frame->height, dec_ctx->frame_number);
         /*write_yuv_to_separate_file(frame, buf);*/
-        write_yuv_to_file(frame, fp_out);
-
-        if (dec_ctx->frame_number >= 3) {
-            fclose(fp_out);
-            exit(0);
+        if (frame->format == AV_PIX_FMT_YUV420P) {
+            write_yuv_to_file(frame, fp_out);
+        } else if (frame->format == AV_PIX_FMT_NV12) {
+            write_nv12_to_file(frame, fp_out);
         }
+        av_frame_unref(frame);
+
+        /*if (dec_ctx->frame_number >= 5) {*/
+            /*fclose(fp_out);*/
+            /*exit(0);*/
+        /*}*/
     }
 }
 
@@ -111,26 +141,32 @@ int main(int argc, char **argv)
     int ret;
     AVPacket *pkt;
 
-    if (argc <= 2) {
-        fprintf(stderr, "Usage: %s <input file> <output file>\n"
+    if (argc <= 3) {
+        fprintf(stderr, "Usage: %s <input file> <output file> <decoder implementation[sw|cuvid|qsv]\n"
                 "And check your input file is raw .h264 file.\n", argv[0]);
         exit(0);
     }
     filename    = argv[1];
     filename_out = argv[2];
+    const char* codec_name = "h264";
+    if (strcmp(argv[3], "sw") == 0) {
+        codec_name = "h264";
+    } else if (strcmp(argv[3], "cuvid") == 0) {
+        codec_name = "h264_cuvid";
+    } else if (strcmp(argv[3], "qsv") == 0) {
+        codec_name = "h264_qsv";
+    }
     FILE* fp_out = fopen(filename_out, "wb");
     if (!fp_out) {
         printf("Could not open %s\n", filename_out);
         exit(1);
     }
 
-    pkt = av_packet_alloc();
-    if (!pkt)
-        exit(1);
 
     memset(inbuf + INBUF_SIZE, 0, AV_INPUT_BUFFER_PADDING_SIZE);
 
-    codec = avcodec_find_decoder(AV_CODEC_ID_H264);
+    /*codec = avcodec_find_decoder(AV_CODEC_ID_H264);*/
+    codec = avcodec_find_decoder_by_name(codec_name);
     if (!codec) {
         fprintf(stderr, "Codec not found\n");
         exit(1);
@@ -152,6 +188,8 @@ int main(int argc, char **argv)
         fprintf(stderr, "Could not open codec\n");
         exit(1);
     }
+    printf("pixel format  = %s\n", av_get_pix_fmt_name(c->pix_fmt));
+
 
     f = fopen(filename, "rb");
     if (!f) {
@@ -162,6 +200,12 @@ int main(int argc, char **argv)
     frame = av_frame_alloc();
     if (!frame) {
         fprintf(stderr, "Could not allocate video frame\n");
+        exit(1);
+    }
+
+    pkt = av_packet_alloc();
+    if (!pkt) {
+        fprintf(stderr, "Could not allocate packet\n");
         exit(1);
     }
 
@@ -183,8 +227,9 @@ int main(int argc, char **argv)
             data      += ret;
             data_size -= ret;
 
-            if (pkt->size)
+            if (pkt->size)  {
                 decode(c, frame, pkt, fp_out);
+            }
         }
     }
 
