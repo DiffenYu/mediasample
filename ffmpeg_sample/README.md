@@ -13,8 +13,8 @@ ffmpeg  -s 640x480 -pix_fmt nv12 -i 640x480_camera_nv12.yuv -pix_fmt yuv420p -s 
 
 Play the raw yuv clip via ffplay.
 ```bash
-ffplay -s 640x480 -pix_fmt yuv420p 640x480_screen_i420.yuv
-ffplay -s 640x480 -pix_fmt nv12 640x480_screen_i420.yuv
+ffplay -video_size 640x480 -pixel_format yuv420p 640x480_screen_i420.yuv
+ffplay -video_size 640x480 -pixel_format nv12 640x480_screen_i420.yuv
 ```
 
 
