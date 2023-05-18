@@ -49,6 +49,32 @@ build_x264() {
     popd
 }
 
+build_vvenc() {
+    pushd ${SRC_DIR}
+    git clone https://github.com/fraunhoferhhi/vvenc
+    pushd vvenc
+    make install-release-shared install-prefix=${INSTALL_DIR}
+    popd
+    popd
+}
+
+build_vvdec() {
+    pushd ${SRC_DIR}
+    git clone https://github.com/fraunhoferhhi/vvdec
+    pushd vvdec
+    make install-release-shared install-prefix=${INSTALL_DIR}
+    popd
+    popd
+}
+build_vvenc() {
+    pushd ${SRC_DIR}
+    git clone https://github.com/fraunhoferhhi/vvenc
+    pushd vvenc
+    make install-release-shared install-prefix=${INSTALL_DIR}
+    popd
+    popd
+}
+
 install_fdkaac() {
     local VERSION="0.1.4"
     local SRC="fdk-aac-${VERSION}.tar.gz"
@@ -98,7 +124,9 @@ install_ffmpeg() {
 
 
 build_ffmpeg() {
+    local tag="n4.4.3"
     local config_params=""
+    local enable_vvc=false
     config_params="${config_params} --prefix=${INSTALL_DIR}"
     config_params="${config_params} --enable-shared"
     config_params="${config_params} --enable-asm"
@@ -136,6 +164,18 @@ build_ffmpeg() {
                 config_params="${config_params} --enable-decoder=hevc_qsv"
 
                 ;;
+            vvcenc)
+                tag="release/6.0"
+                config_params="${config_params} --enable-libvvenc"
+                enable_vvc=true
+
+                ;;
+            vvcdec)
+                tag="release/6.0"
+                config_params="${config_params} --enable-libvvdec"
+                enable_vvc=true
+
+                ;;
             * )
                 echo "parameter: $1 is not supported"
                 ;;
@@ -144,14 +184,18 @@ build_ffmpeg() {
     done
     echo "${config_params}"
 
-    local tag="n4.4.3"
     pushd ${SRC_DIR}
-    if [[ ! -s "FFmpeg" ]]; then
-        git clone https://github.com/FFmpeg/FFmpeg.git
-        pushd FFmpeg
-        git checkout -b ${tag} ${tag}
+    if [[ ! -s "ffmpeg" ]]; then
+        git clone https://github.com/FFmpeg/FFmpeg.git ffmpeg
+        pushd ffmpeg
+        git checkout ${tag}
+        if [ "$enable_vvc" = true ]; then
+            echo "enable vvc"
+            wget -O Add-support-for-H266-VVC.patch https://patchwork.ffmpeg.org/series/8365/mbox/
+            git apply ./Add-support-for-H266-VVC.patch --exclude=libavcodec/version.h
+        fi
     else
-        pushd FFmpeg
+        pushd ffmpeg
     fi
 
     PKG_CONFIG_PATH=${INSTALL_DIR}/lib/pkgconfig \
@@ -199,6 +243,14 @@ if [[ $# -gt 0 ]]; then
             ;;
         x264 )
             build_x264
+            exit 0
+            ;;
+        vvenc )
+            build_vvenc
+            exit 0
+            ;;
+        vvdec )
+            build_vvdec
             exit 0
             ;;
         sample )
