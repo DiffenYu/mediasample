@@ -2,8 +2,8 @@
 
 usage() {
     echo "Usage:"
-    echo "  ./build.sh ffmpeg [x264] [cuda] [qsv] [debug]"
-    echo "  ./build.sh x264"
+    echo "  ./build.sh ffmpeg [openh264] [x264] [cuda] [qsv] [debug]"
+    echo "  ./build.sh x264|openh264|vvdec|vvenc"
     echo "  ./build.sh sample"
 }
 
@@ -30,6 +30,17 @@ install_opus() {
     ./configure --prefix=$SRC_DIR
     make -s V=0
     make install
+    popd
+}
+
+build_openh264() {
+    local BRANCH="master"
+    pushd ${SRC_DIR}
+    [[ ! -s "openh264" ]] && git clone https://github.com/cisco/openh264.git
+    pushd openh264
+    git checkout ${BRANCH}
+    make -j$(nproc)
+    make install-shared PREFIX=${INSTALL_DIR}
     popd
 }
 
@@ -142,6 +153,10 @@ build_ffmpeg() {
                 ;;
             x264)
                 config_params="${config_params} --enable-libx264"
+                ;;
+
+            openh264)
+                config_params="${config_params} --enable-libopenh264"
 
                 ;;
             cuda)
@@ -239,6 +254,11 @@ if [[ $# -gt 0 ]]; then
         ffmpeg )
             shift
             build_ffmpeg $@
+            exit 0
+            ;;
+        openh264 )
+            shift
+            build_openh264
             exit 0
             ;;
         x264 )
