@@ -2,8 +2,11 @@
 
 usage() {
     echo "Usage:"
-    echo "  ./build.sh ffmpeg [openh264] [x264] [cuda] [qsv] [debug]"
-    echo "  ./build.sh x264|openh264|vvdec|vvenc"
+    echo "> build separate component, use below build command"
+    echo "  ./build.sh x264|x265|openh264|vvdec|vvenc"
+    echo "> build ffmpeg with optional component, use below command,
+    need to make sure those optional components already built via above command."
+    echo "  ./build.sh ffmpeg [openh264] [x264] [x265] [cuda] [qsv] [debug]"
     echo "  ./build.sh sample"
 }
 
@@ -17,7 +20,7 @@ INSTALL_DIR="${this}/install"
 [[ ! -d ${INSTALL_DIR} ]] && mkdir $INSTALL_DIR
 
 install_deps() {
-    sudo -E yum install gcc gcc-c++ nasm yasm -y 
+    sudo -E yum install gcc gcc-c++ nasm yasm -y
 }
 
 install_opus() {
@@ -60,6 +63,20 @@ build_x264() {
     popd
 }
 
+build_x265() {
+    local BRANCH="stable"
+    pushd ${SRC_DIR}
+    [[ ! -s "x265" ]] && git clone --branch ${BRANCH} https://github.com/videolan/x265.git
+    pushd x265
+    [[ ! -s "build_x265" ]] && mkdir build_x265
+    pushd build_x265
+    cmake -DBUILD_SHARED_LIBS=ON \
+        -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} ../source
+
+    make -j$(nproc)
+    make install
+}
+
 build_vvenc() {
     pushd ${SRC_DIR}
     git clone https://github.com/fraunhoferhhi/vvenc
@@ -96,7 +113,7 @@ install_fdkaac() {
     echo "Building fdk-aac-${VERSION}"
     pushd fdk-aac-${VERSION}
     ./configure --prefix=$SRC_DIR --enable-shared --enable-static
-    make -s V=0 
+    make -s V=0
     make install
     popd
 
@@ -145,6 +162,10 @@ build_ffmpeg() {
                 ;;
             x264)
                 config_params="${config_params} --enable-libx264"
+                ;;
+
+            x265)
+                config_params="${config_params} --enable-libx265"
                 ;;
 
             openh264)
@@ -255,6 +276,10 @@ if [[ $# -gt 0 ]]; then
             ;;
         x264 )
             build_x264
+            exit 0
+            ;;
+        x265 )
+            build_x265
             exit 0
             ;;
         vvenc )
