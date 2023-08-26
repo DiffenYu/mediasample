@@ -77,14 +77,6 @@ build_vvdec() {
     popd
     popd
 }
-build_vvenc() {
-    pushd ${SRC_DIR}
-    git clone https://github.com/fraunhoferhhi/vvenc
-    pushd vvenc
-    make install-release-shared install-prefix=${INSTALL_DIR}
-    popd
-    popd
-}
 
 install_fdkaac() {
     local VERSION="0.1.4"
