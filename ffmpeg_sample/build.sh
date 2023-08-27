@@ -3,10 +3,10 @@
 usage() {
     echo "Usage:"
     echo "> build separate component, use below build command"
-    echo "  ./build.sh x264|x265|openh264|vvdec|vvenc"
+    echo "  ./build.sh x264|x265|openh264|vvdec|vvenc|fdkaac"
     echo "> build ffmpeg with optional component, use below command,
     need to make sure those optional components already built via above command."
-    echo "  ./build.sh ffmpeg [openh264] [x264] [x265] [vvcenc] [vvcdec] [extend_flv] [cuda] [qsv] [debug]"
+    echo "  ./build.sh ffmpeg openh264|x264|x265|vvcenc|vvcdec|fdkaac|extend_flv|cuda|qsv|debug"
     echo "  ./build.sh sample"
 }
 
@@ -95,28 +95,24 @@ build_vvdec() {
     popd
 }
 
-install_fdkaac() {
-    local VERSION="0.1.4"
-    local SRC="fdk-aac-${VERSION}.tar.gz"
-    local SRC_URL="http://sourceforge.net/projects/opencore-amr/files/fdk-aac/${SRC}/download"
-    local SRC_MD5SUM="e274a7d7f6cd92c71ec5c78e4dc9f8b7"
+# need to install autoconf && automake in mac via below commands
+# brew install autoconf
+# brew install atuomake
+build_fdkaac() {
+    local tag="v2.0.2"
+    pushd ${SRC_DIR}
+    [[ ! -s "fdk-aac" ]] && git clone -b ${tag} https://github.com/mstorsjo/fdk-aac.git
+    pushd fdk-aac
+    sh autogen.sh
+    ./configure \
+        --prefix=${INSTALL_DIR} \
+        --enable-shared \
+        --enable-static
 
-    echo "Downloading fdk-aac-${VERSION}"
-    [[ ! -s ${SRC} ]] && wget -c ${SRC_URL} -O ${SRC}
-    if ! (echo "${SRC_MD5SUM} ${SRC}" | md5sum --check) ; then
-        rm -f ${SRC} && wget -c ${SRC_URL} -O ${SRC}
-        (echo "${SRC_MD5SUM} ${SRC}" | md5sum --check) || (echo "Downloaded file ${SRC} is corrupted." && return 1)
-    fi
-    rm -fr fdk-aac-${VERSION}
-    tar xf ${SRC}
-
-    echo "Building fdk-aac-${VERSION}"
-    pushd fdk-aac-${VERSION}
-    ./configure --prefix=$SRC_DIR --enable-shared --enable-static
-    make -s V=0
+    make -j$(nproc)
     make install
     popd
-
+    popd
 }
 
 install_ffmpeg() {
@@ -212,6 +208,12 @@ build_ffmpeg() {
                 tag="release/6.0"
                 config_params="${config_params} --enable-libvvdec"
                 enable_vvc=true
+
+                ;;
+
+            fdkaac)
+                config_params="${config_params} --enable-libfdk-aac"
+                config_params="${config_params} --enable-nonfree"
 
                 ;;
 
@@ -316,6 +318,10 @@ if [[ $# -gt 0 ]]; then
             ;;
         vvdec )
             build_vvdec
+            exit 0
+            ;;
+        fdkaac)
+            build_fdkaac
             exit 0
             ;;
         sample )
