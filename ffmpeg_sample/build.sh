@@ -6,7 +6,7 @@ usage() {
     echo "  ./build.sh x264|x265|openh264|vvdec|vvenc"
     echo "> build ffmpeg with optional component, use below command,
     need to make sure those optional components already built via above command."
-    echo "  ./build.sh ffmpeg [openh264] [x264] [x265] [cuda] [qsv] [debug]"
+    echo "  ./build.sh ffmpeg [openh264] [x264] [x265] [vvcenc] [vvcdec] [extend_flv] [cuda] [qsv] [debug]"
     echo "  ./build.sh sample"
 }
 
@@ -142,6 +142,16 @@ install_ffmpeg() {
 
 }
 
+prepare_extend_flv() {
+    local branch=4.3
+    pushd ${SRC_DIR}
+    [[ ! -s "ffmpeg_rtmp_h265" ]] && git clone --branch ${branch} https://github.com/runner365/ffmpeg_rtmp_h265.git
+    cp ffmpeg_rtmp_h265/flv.h ${SRC_DIR}/ffmpeg/libavformat/
+    cp ffmpeg_rtmp_h265/flvdec.c ${SRC_DIR}/ffmpeg/libavformat/
+    cp ffmpeg_rtmp_h265/flvenc.c ${SRC_DIR}/ffmpeg/libavformat/
+    popd
+}
+
 
 build_ffmpeg() {
     local tag="n4.4.3"
@@ -204,6 +214,12 @@ build_ffmpeg() {
                 enable_vvc=true
 
                 ;;
+
+            extend_flv)
+                enable_extend_flv=true
+
+                ;;
+
             * )
                 echo "parameter: $1 is not supported"
                 ;;
@@ -222,8 +238,20 @@ build_ffmpeg() {
             wget -O Add-support-for-H266-VVC.patch https://patchwork.ffmpeg.org/series/8365/mbox/
             git apply ./Add-support-for-H266-VVC.patch --exclude=libavcodec/version.h
         fi
+        if [ "${enable_extend_flv}" = true ]; then
+            echo "enable extend flv[hevc/vp8/vp9/opus]"
+            prepare_extend_flv
+        fi
     else
         pushd ffmpeg
+        if [ "${enable_extend_flv}" = true ]; then
+            if [ `grep -c "HEVC" libavformat/flv.h` -ne '0' ]; then
+                echo "already prepred extend flv releated files"
+            else
+                echo "need to prepare"
+                prepare_extend_flv
+            fi
+        fi
     fi
 
     PKG_CONFIG_PATH=${INSTALL_DIR}/lib/pkgconfig \
@@ -295,7 +323,7 @@ if [[ $# -gt 0 ]]; then
             exit 0
             ;;
         * )
-            echo 'Error: Wrong input parameter!'
+            echo 'error: wrong input parameter!'
             usage
             exit 1
             ;;
