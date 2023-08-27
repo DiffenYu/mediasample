@@ -3,10 +3,10 @@
 usage() {
     echo "Usage:"
     echo "> build separate component, use below build command"
-    echo "  ./build.sh x264|x265|openh264|vvdec|vvenc|fdkaac"
+    echo "  ./build.sh x264|x265|openh264|vvdec|vvenc|fdkaac|opus"
     echo "> build ffmpeg with optional component, use below command,
     need to make sure those optional components already built via above command."
-    echo "  ./build.sh ffmpeg openh264|x264|x265|vvcenc|vvcdec|fdkaac|extend_flv|cuda|qsv|debug"
+    echo "  ./build.sh ffmpeg openh264|x264|x265|vvcenc|vvcdec|fdkaac|opus|extend_flv|cuda|qsv|debug"
     echo "  ./build.sh sample"
 }
 
@@ -23,18 +23,6 @@ install_deps() {
     sudo -E yum install gcc gcc-c++ nasm yasm -y
 }
 
-install_opus() {
-    echo "Downloading opus-1.1..."
-    wget -c http://downloads.xiph.org/releases/opus/opus-1.1.tar.gz
-    tar -xvzf opus-1.1.tar.gz
-
-    echo "Building opus-1.1..."
-    pushd opus-1.1
-    ./configure --prefix=$SRC_DIR
-    make -s V=0
-    make install
-    popd
-}
 
 build_openh264() {
     local BRANCH="master"
@@ -44,6 +32,7 @@ build_openh264() {
     git checkout ${BRANCH}
     make -j$(nproc)
     make install-shared PREFIX=${INSTALL_DIR}
+    popd
     popd
 }
 
@@ -111,6 +100,19 @@ build_fdkaac() {
         --enable-shared \
         --enable-static
 
+    make -j$(nproc)
+    make install
+    popd
+    popd
+}
+
+build_opus() {
+    local tag="v1.4"
+    pushd ${SRC_DIR}
+    [[ ! -s "opus" ]] && git clone -b ${tag} https://github.com/xiph/opus.git
+    pushd opus
+    sh autogen.sh
+    ./configure --prefix=${INSTALL_DIR}
     make -j$(nproc)
     make install
     popd
@@ -189,10 +191,13 @@ build_ffmpeg() {
                 enable_vvc=true
 
                 ;;
-
             fdkaac)
                 config_params="${config_params} --enable-libfdk-aac"
                 config_params="${config_params} --enable-nonfree"
+
+                ;;
+            opus)
+                config_params="${config_params} --enable-libopus"
 
                 ;;
 
@@ -282,6 +287,10 @@ if [[ $# -gt 0 ]]; then
             ;;
         fdkaac)
             build_fdkaac
+            exit 0
+            ;;
+        opus)
+            build_opus
             exit 0
             ;;
         sample )
