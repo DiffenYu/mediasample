@@ -117,29 +117,6 @@ build_fdkaac() {
     popd
 }
 
-install_ffmpeg() {
-    local VERSION="3.1.2"
-    local DIR="ffmpeg-${VERSION}"
-    local SRC="${DIR}.tar.bz2"
-    local SRC_URL="http://ffmpeg.org/releases/${SRC}"
-    local SRC_MD5SUM="8095acdc8d5428b2a9861cb82187ea73"
-
-    echo "Downloading ffmpeg-${VERSION}"
-    [[ ! -s ${SRC} ]] && wget -c ${SRC_URL}
-    if ! (echo "${SRC_MD5SUM} ${SRC}" | md5sum --check) ; then
-        rm -f ${SRC} && wget -c ${SRC_URL}
-        (echo "${SRC_MD5SUM} ${SRC}" | md5sum --check) || (echo "Downloaded file ${SRC} is corrupted." && return 1)
-    fi
-    rm -fr ${DIR}
-    tar xf ${SRC}
-
-    echo "Building ffmpeg-${VERSION}"
-    pushd ${DIR}
-    PKG_CONFIG_PATH=$SRC_DIR/lib/pkgconfig CFLAGS=-fPIC ./configure --prefix=$SRC_DIR --enable-shared --disable-libvpx --disable-vaapi --enable-libopus --enable-libfdk-aac --enable-nonfree --enable-libx264 --enable-gpl && make -j4 -s V=0 && make install
-    popd
-
-}
-
 prepare_extend_flv() {
     local branch=4.3
     pushd ${SRC_DIR}
@@ -265,25 +242,6 @@ build_ffmpeg() {
     make install
     popd
     popd
-}
-
-copy_libs() {
-    cp -p $SRC_DIR/lib/*.so.* $DST_DIR
-    cp -p $SRC_DIR/lib/*.so $DST_DIR
-}
-
-ffmpeg() {
-    install_deps
-
-    pushd $SRC_DIR
-
-    install_x264
-    install_fdkaac
-    install_opus
-    install_ffmpeg
-    popd
-
-    copy_libs
 }
 
 sample() {
