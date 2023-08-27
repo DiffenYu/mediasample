@@ -67,14 +67,16 @@ build_x265() {
     local BRANCH="stable"
     pushd ${SRC_DIR}
     [[ ! -s "x265" ]] && git clone --branch ${BRANCH} https://github.com/videolan/x265.git
-    pushd x265
-    [[ ! -s "build_x265" ]] && mkdir build_x265
-    pushd build_x265
+    pushd x265/source
+    [[ ! -s "build" ]] && mkdir build
+    pushd build
     cmake -DBUILD_SHARED_LIBS=ON \
-        -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} ../source
+        -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} ..
 
     make -j$(nproc)
     make install
+    popd
+    popd
 }
 
 build_vvenc() {
