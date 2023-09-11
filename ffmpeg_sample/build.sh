@@ -129,6 +129,16 @@ prepare_extend_flv() {
     popd
 }
 
+preare_nvcodec_header() {
+    local branch=n11.1.5.2
+    pushd ${SRC_DIR}
+    [[ ! -s "nv-codec-headers" ]] && git clone --branch ${branch} https://github.com/FFmpeg/nv-codec-headers.git
+    pushd nv-codec-headers
+    make PREFIX=${INSTALL_DIR} install
+    popd
+    popd
+}
+
 
 build_ffmpeg() {
     local tag="n4.4.3"
@@ -160,6 +170,7 @@ build_ffmpeg() {
 
                 ;;
             cuda)
+                preare_nvcodec_header
                 config_params="${config_params} --enable-ffnvcodec"
                 config_params="${config_params} --enable-encoder=h264_nvenc"
                 config_params="${config_params} --enable-hwaccel=h264_nvdec"
