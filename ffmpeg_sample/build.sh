@@ -24,7 +24,6 @@ install_deps() {
     sudo -E yum install gcc gcc-c++ nasm yasm -y
 }
 
-
 build_openh264() {
     local BRANCH="master"
     pushd ${SRC_DIR}
@@ -151,6 +150,16 @@ build_ffmpeg() {
     config_params="${config_params} --enable-shared"
     config_params="${config_params} --enable-asm"
     config_params="${config_params} --enable-gpl"
+
+    # ffmpeg build failed on xcode 15
+    # refer to the link https://github.com/spack/spack/pull/40187/commits/7270df34107a63d428848e5420c58fed9efc5f5d
+    if command -v xcodebuild > /dev/null 2>&1; then
+        version=$(xcodebuild -version | grep Xcode | cut -d " " -f 2)
+        if [[ "${version}" == "15.0" ]]; then
+            config_params="${config_params} --extra-ldflags=-Wl,-ld_classic"
+        fi
+    fi
+
     while [[ $# -gt 0 ]]; do
         case $1 in
             debug)
