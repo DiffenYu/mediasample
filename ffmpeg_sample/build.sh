@@ -5,7 +5,8 @@ usage() {
     echo "> build separate component, use below build command"
     echo "  ./build.sh x264|x265|openh264|vvdec|vvenc|fdkaac|opus"
     echo "> build ffmpeg with optional component, use below command,
-    need to make sure those optional components already built via above command."
+    need to make sure those optional components already built via above command.
+    If you want to build ffmepg with ffplay, you need to install sdl2 first."
     echo "  ./build.sh ffmpeg openh264|x264|x265|vvcenc|vvcdec|fdkaac|opus|extend_flv|cuda|qsv|debug"
     echo "  ./build.sh sample"
 }
@@ -265,7 +266,11 @@ sample() {
 }
 
 shopt -s extglob
-if [[ $# -gt 0 ]]; then
+if [[ $# -eq 0 ]]; then
+    usage
+    exit 0
+fi
+while [[ $# -gt 0 ]]; do
     case $1 in
         usage )
             exit 0
@@ -276,33 +281,25 @@ if [[ $# -gt 0 ]]; then
             exit 0
             ;;
         openh264 )
-            shift
             build_openh264
-            exit 0
             ;;
         x264 )
             build_x264
-            exit 0
             ;;
         x265 )
             build_x265
-            exit 0
             ;;
         vvenc )
             build_vvenc
-            exit 0
             ;;
         vvdec )
             build_vvdec
-            exit 0
             ;;
         fdkaac)
             build_fdkaac
-            exit 0
             ;;
         opus)
             build_opus
-            exit 0
             ;;
         sample )
             sample
@@ -314,7 +311,6 @@ if [[ $# -gt 0 ]]; then
             exit 1
             ;;
     esac
-else
-    usage
-fi
+    shift
+done
 
