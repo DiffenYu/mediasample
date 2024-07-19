@@ -24,6 +24,12 @@ install_deps() {
     sudo -E yum install gcc gcc-c++ nasm yasm -y
 }
 
+
+version_gt() { test "$(echo "$@" | tr " " "\n" | sort -V | head -n 1)" != "$1"; }
+version_le() { test "$(echo "$@" | tr " " "\n" | sort -V | head -n 1)" == "$1"; }
+version_lt() { test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" != "$1"; }
+version_ge() { test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" == "$1"; }
+
 build_openh264() {
     local BRANCH="master"
     pushd ${SRC_DIR}
@@ -171,7 +177,7 @@ build_ffmpeg() {
     # refer to the link https://github.com/spack/spack/pull/40187/commits/7270df34107a63d428848e5420c58fed9efc5f5d
     if command -v xcodebuild > /dev/null 2>&1; then
         version=$(xcodebuild -version | grep Xcode | cut -d " " -f 2)
-        if [[ "${version}" == "15.0" ]]; then
+        if version_ge ${version} 15.0; then
             config_params="${config_params} --extra-ldflags=-Wl,-ld_classic"
         fi
     fi
