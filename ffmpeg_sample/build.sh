@@ -3,11 +3,11 @@
 usage() {
     echo "Usage:"
     echo "> build separate component, use below build command"
-    echo "  ./build.sh x264|x265|openh264|vvdec|vvenc|fdkaac|opus"
+    echo "  ./build.sh x264|x265|openh264|vvdec|vvenc|vpx|fdkaac|opus"
     echo "> build ffmpeg with optional component, use below command,
     need to make sure those optional components already built via above command.
     If you want to build ffmepg with ffplay, you need to install sdl2 first."
-    echo "  ./build.sh ffmpeg openh264|x264|x265|vvcenc|vvcdec|fdkaac|opus|extend_flv|cuda|qsv|debug"
+    echo "  ./build.sh ffmpeg openh264|x264|x265|vvcenc|vvcdec|vpx|fdkaac|opus|extend_flv|cuda|qsv|debug"
     echo "  ./build.sh sample"
 }
 
@@ -84,6 +84,22 @@ build_vvdec() {
     make install-release-shared install-prefix=${INSTALL_DIR}
     popd
     popd
+}
+
+build_vpx() {
+    # todo: only support arm mac, need to modify the target for other platform
+    local BRANCH=v1.13.0
+    pushd ${SRC_DIR}
+    git clone https://chromium.googlesource.com/webm/libvpx.git -b ${BRANCH}
+    pushd libvpx
+    ./configure \
+        --prefix=${INSTALL_DIR} \
+        --target=arm64-darwin22-gcc \
+        --enable-shared \
+        --disable-examples \
+        --disable-unit-tests
+    make
+    make install
 }
 
 # need to install autoconf && automake in mac via below commands
@@ -214,6 +230,10 @@ build_ffmpeg() {
                 enable_vvc=true
 
                 ;;
+            vpx)
+                config_params="${config_params} --enable-libvpx"
+
+                ;;
             fdkaac)
                 config_params="${config_params} --enable-libfdk-aac"
                 config_params="${config_params} --enable-nonfree"
@@ -299,6 +319,9 @@ while [[ $# -gt 0 ]]; do
             ;;
         x265 )
             build_x265
+            ;;
+        vpx )
+            build_vpx
             ;;
         vvenc )
             build_vvenc
