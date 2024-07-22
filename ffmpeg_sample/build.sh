@@ -165,6 +165,7 @@ preare_nvcodec_header() {
 build_ffmpeg() {
     echo "before run ffmpeg, make sure you've export the LD_LIBRARY_PATH shown as below first"
     echo "export LD_LIBRARY_PATH=/path/to/mediasample/ffmpeg_sample/install/lib:$LD_LIBRARY_PATH"
+    echo "For mac, you need to export DYLD_LIBRARY_PATH instead"
     local tag="n4.4.3"
     local config_params=""
     local enable_vvc=false
