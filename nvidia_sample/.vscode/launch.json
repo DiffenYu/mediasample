@@ -1,0 +1,39 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug CUDA",
+        "type": "cuda-gdb",
+        "request": "launch",
+        "program": "${workspaceFolder}/build/NvEncoderSample",
+        // "args": [
+        //   "-i; 640x480_camera_nv12.yuv; -o; output.h264; -w; 640; -h; 480; -c; h264; -f; nv12"
+        // ],
+        "args": [
+          "-i", "640x480_camera_nv12.yuv",
+          "-o", "output.h264",
+          "-w", "640",
+          "-h", "480",
+          "-c", "h264",
+          "-f", "nv12"
+        ],
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}",
+        "environment": [],
+        // "externalConsole": false,
+        "preLaunchTask": "build",
+        // "MIMode": "gdb",
+        "miDebuggerArgs": ["--quiet"],
+        // "setupCommands": [
+        //   {
+        //     "description": "Enable pretty-printing for gdb",
+        //     "text": "-enable-pretty-printing",
+        //     "ignoreFailures": true
+        //   }
+        // ],
+        "miDebuggerPath": "/usr/local/cuda/bin/cuda-gdb",
+        "internalConsoleOptions": "openOnSessionStart"
+      }
+    ]
+}
+  
