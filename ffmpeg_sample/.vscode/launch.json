@@ -1,0 +1,48 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug",
+            "program": "${workspaceFolder}/install/bin/ffmpeg",
+            "args": [
+                "-re",
+                "-y",
+                "-f",
+                "rawvideo",
+                "-s",
+                "640x480",
+                "-pixel_format",
+                "nv12",
+                "-i",
+                "${workspaceFolder}/test/640x480_camera_nv12.yuv",
+                "-c:v",
+                "h264_nvenc",
+                "-rc",
+                "cbr",
+                "-zerolatency",
+                "1",
+                "-delay",
+                "0",
+                "-forced-idr",
+                "1",
+                "-profile",
+                "0",
+                "-preset",
+                "fast",
+                "-r",
+                "30",
+                "-b:v",
+                "1000k",
+                "${workspaceFolder}/test/640x480_camera_nv12_h264_nvenc_cbr_fast.h264"
+            ],
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false,
+            "env": {"LD_LIBRARY_PATH": "${workspaceFolder}/install/lib:${env:LD_LIBRARY_PATH}"},
+        }
+    ]
+}
