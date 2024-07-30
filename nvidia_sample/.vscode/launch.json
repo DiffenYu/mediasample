@@ -3,14 +3,12 @@
     "configurations": [
       {
         "name": "Debug CUDA",
-        "type": "cuda-gdb",
+        // "type": "cuda-gdb",
+        "type": "lldb",
         "request": "launch",
         "program": "${workspaceFolder}/build/NvEncoderSample",
-        // "args": [
-        //   "-i; 640x480_camera_nv12.yuv; -o; output.h264; -w; 640; -h; 480; -c; h264; -f; nv12"
-        // ],
         "args": [
-          "-i", "640x480_camera_nv12.yuv",
+          "-i", "${workspaceFolder}/640x480_camera_nv12.yuv",
           "-o", "output.h264",
           "-w", "640",
           "-h", "480",
