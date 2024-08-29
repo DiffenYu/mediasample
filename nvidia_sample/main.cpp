@@ -7,6 +7,7 @@
 #include <iostream>
 #include <nvEncodeAPI.h>
 #include <vector>
+#include "utils.h"
 
 #define CUDA_API_CALL(func)                                                    \
   {                                                                            \
@@ -89,13 +90,6 @@ std::string GetNVEncErrorString(NVENCSTATUS status) {
   }
 }
 
-static inline bool operator==(const GUID &guid1, const GUID &guid2) {
-  return !memcmp(&guid1, &guid2, sizeof(GUID));
-}
-
-static inline bool operator!=(const GUID &guid1, const GUID &guid2) {
-  return !(guid1 == guid2);
-}
 
 class NvEncoder {
 public:
@@ -185,11 +179,7 @@ void NvEncoder::Initialize() {
         initializeParams_.encodeConfig->gopLength;
   }
 
-  std::cout << "Initializing encoder with the following parameters:"
-            << std::endl;
-  std::cout << "  Width: " << width_ << std::endl;
-  std::cout << "  Height: " << height_ << std::endl;
-  std::cout << "  Format: " << format_ << std::endl;
+  PrintNVEncInitializeParams(initializeParams_);
 
   NVENC_API_CALL(
       nvencFuncs_.nvEncInitializeEncoder(nvencHandle_, &initializeParams_));
@@ -198,23 +188,17 @@ void NvEncoder::Initialize() {
 }
 
 void NvEncoder::Cleanup() {
-  std::cout << "DestroyInputBuffer" << std::endl;
   for (auto &surface : inputSurfaces_) {
     NVENC_API_CALL(nvencFuncs_.nvEncDestroyInputBuffer(nvencHandle_, surface))
   }
-  std::cout << "DestroyBitstreamBuffer" << std::endl;
   for (auto &bitstream : outputBitstreams_) {
     NVENC_API_CALL(
         nvencFuncs_.nvEncDestroyBitstreamBuffer(nvencHandle_, bitstream))
   }
-  std::cout << "DestroyEncoder" << std::endl;
   if (nvencHandle_) {
-    std::cout << "DestroyEncoder 1" << std::endl;
     NVENC_API_CALL(nvencFuncs_.nvEncDestroyEncoder(nvencHandle_));
     nvencHandle_ = nullptr;
-    std::cout << "DestroyEncoder 2" << std::endl;
   }
-  std::cout << "cuCtxDestroy" << std::endl;
   if (cuContext_) {
     CUDA_API_CALL(cuCtxDestroy(cuContext_));
     cuContext_ = nullptr;
@@ -223,6 +207,8 @@ void NvEncoder::Cleanup() {
 
 void NvEncoder::AllocateBuffers() {
   num_buffers_ = encodeConfig_.frameIntervalP + encodeConfig_.rcParams.lookaheadDepth + 1;
+  std::cout << "frameIntervalP: " << encodeConfig_.frameIntervalP << std::endl;
+  std::cout << "lookaheadDepth: " << encodeConfig_.rcParams.lookaheadDepth << std::endl;
   output_delay_ = num_buffers_ - 1;
   std::cout << "num_buffers_: " << num_buffers_ << std::endl;
   
