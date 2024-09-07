@@ -41,6 +41,7 @@ find_library(NVENC_LIBRARY nvidia-encode HINTS
 )
 
 # include_directories(${CUDA_INCLUDE_DIRS} /path/to/Video_Codec_SDK/Interface)
+include_directories(${CUDA_INCLUDE_DIRS} /home/yudingfeng/Downloads/Video_Codec_SDK_12.0.16/Interface)
 add_executable(NvEncoderSample main.cpp)
 # target_link_libraries(NvEncoderSample ${CUDA_LIBRARIES} /path/to/Video_Codec_SDK/Lib/linux/stubs/x86_64/libnvidia-encode.so cuda)
 target_link_libraries(NvEncoderSample ${CUDA_LIBRARIES} ${NVCUVID_LIBRARY} ${NVENC_LIBRARY} cuda)
