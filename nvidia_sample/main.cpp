@@ -234,7 +234,7 @@ void NvEncoder::AllocateBuffers() {
 
 void NvEncoder::EncodeFrame(const uint8_t *frameData,
                             std::ofstream &outputFile) {
-  uint32_t index = num_to_send_ % 3;
+  uint32_t index = num_to_send_ % num_buffers_;
 
   // Copy frame data to input buffer
   NV_ENC_LOCK_INPUT_BUFFER lockInputBuffer = {NV_ENC_LOCK_INPUT_BUFFER_VER};
@@ -279,7 +279,7 @@ void NvEncoder::EncodeFrame(const uint8_t *frameData,
 void NvEncoder::GetEncodedData(std::ofstream &outputFile, bool outputdelay) {
   int32_t end = outputdelay ? num_to_send_ - output_delay_ : num_to_send_;
   for (; num_to_get_ < end; num_to_get_++) {
-    int index = num_to_get_ % 3;
+    int index = num_to_get_ % num_buffers_;
 
     NV_ENC_LOCK_BITSTREAM lockBitstreamData = {};
     lockBitstreamData.version = NV_ENC_LOCK_BITSTREAM_VER;
