@@ -1,0 +1,3 @@
+- Install docker refer to https://docs.docker.com/engine/install/ubuntu/
+- Install nvidia container toolkit refer to https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
+- Search nvidia docker image on https://hub.docker.com/r/nvidia/cuda
