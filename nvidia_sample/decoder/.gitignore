@@ -1,0 +1,5 @@
+.cache
+*.yuv
+*.h264
+*.hevc
+*.av1

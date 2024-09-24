@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug CUDA",
+        "type": "lldb",
+        "request": "launch",
+        "program": "${workspaceFolder}/build/NvDecoder",
+        "args": [
+          "${workspaceFolder}/test_video_gop_30.hevc",
+          "out_640x480.nv12"
+        ],
+        "cwd": "${workspaceFolder}",
+        "preLaunchTask": "build",
+        // "MIMode": "gdb",
+        "internalConsoleOptions": "openOnSessionStart"
+      }
+    ]
+}
+  
