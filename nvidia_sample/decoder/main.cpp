@@ -145,17 +145,22 @@ int CUDAAPI NvidiaDecoder::HandleVideoSequence(void *pUserData,
   decodeInfo.CodecType = pVideoFormat->codec;
   decodeInfo.ulWidth = pVideoFormat->coded_width;
   decodeInfo.ulHeight = pVideoFormat->coded_height;
-  decodeInfo.ulNumDecodeSurfaces = 1;
-  decodeInfo.ChromaFormat = pVideoFormat->chroma_format;
-  decodeInfo.OutputFormat = cudaVideoSurfaceFormat_NV12;
-  decodeInfo.DeinterlaceMode = cudaVideoDeinterlaceMode_Weave;
+  decodeInfo.ulNumOutputSurfaces = 2;
+  decodeInfo.ulNumDecodeSurfaces = pVideoFormat->min_num_decode_surfaces;
+  decodeInfo.ulWidth = pVideoFormat->coded_width;
+  decodeInfo.ulHeight = pVideoFormat->coded_height;
+  decodeInfo.ulMaxWidth = pVideoFormat->coded_width;
+  decodeInfo.ulMaxHeight = pVideoFormat->coded_height;
   decodeInfo.ulTargetWidth = decodeInfo.ulWidth;
   decodeInfo.ulTargetHeight = decodeInfo.ulHeight;
-  decodeInfo.ulNumOutputSurfaces = 1;
+  decodeInfo.ChromaFormat = pVideoFormat->chroma_format;
+  decodeInfo.ulCreationFlags = cudaVideoCreate_PreferCUVID;
+  decodeInfo.OutputFormat = cudaVideoSurfaceFormat_NV12;
+  decodeInfo.DeinterlaceMode = cudaVideoDeinterlaceMode_Weave;
 
   CHECK_CUVID_RESULT(cuvidCreateDecoder(&decoder->decoder, &decodeInfo));
 
-  return 1;
+  return pVideoFormat->min_num_decode_surfaces;
 }
 
 int CUDAAPI NvidiaDecoder::HandlePictureDecode(void *pUserData,
@@ -237,7 +242,6 @@ void NvidiaDecoder::Decode() {
     CUVIDSOURCEDATAPACKET packet = {};
     packet.payload_size = inputFileStream.gcount();
     packet.payload = buffer.data();
-    packet.flags = CUVID_PKT_ENDOFSTREAM;
 
     std::cout << "Parsing packet with size: " << packet.payload_size << std::endl;
     CHECK_CUVID_RESULT(cuvidParseVideoData(parser, &packet));
