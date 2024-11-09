@@ -1,0 +1,84 @@
+# Xcode
+.DS_Store
+!/.gitignore
+/*.xcworkspace
+/*.xcodeproj
+/*.xcuserstate
+*.xccheckout
+*.xcodeproj/xcuserdata
+*.xcworkspace/xcuserdata
+*.xcodeproj/project.xcworkspace/xcuserdata
+*.xcodeproj/xcshareddata/xcschemes/xcschememanagement.plist
+*.xcworkspace/xcshareddata/xcschemes/xcschememanagement.plist
+
+# Xcode specific
+DerivedData/
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+
+# Product and API keys
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.mobileprovision
+*.appex
+*.app
+*.xcarchive
+
+# Swift Package Manager
+/.build
+/.swiftpm
+Package.resolved
+
+# CocoaPods
+Pods/
+Podfile.lock
+project.xcworkspace
+
+# Carthage
+Carthage/Build/
+
+# Flutter
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+Flutter/Generated.xcconfig
+Flutter/ephemeral/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+fastlane/test_output/**
+
+# Code Signing
+*.certSigningRequest
+*.mobileprovision
+*.provisionprofile
+
+# App Packaging
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Archives
+*.xcarchive
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Other
+*.plist
+*.strings
+*.swp
+*.lock
+
