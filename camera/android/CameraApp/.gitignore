@@ -1,0 +1,113 @@
+# Java相关
+*.class
+*.jar
+*.war
+*.ear
+
+# Android Studio
+.idea
+.gradle
+local.properties
+/.cxx/
+*.iml
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/.idea/caches
+/.idea/codeStyles
+/.idea/inspectionProfiles
+/.idea/gradle.xml
+/.idea/compiler.xml
+/.idea/jarRepositories.xml
+/.idea/markdown-navigator.xml
+/.idea/jsLibraryMappings.xml
+/.idea/codestyles
+/.idea/vcs.xml
+
+# Android 打包文件
+/build/
+/captures/
+*.apk
+*.ap_
+*.aab
+
+# Gradle
+.gradle/
+/gradle/
+/build/
+gradle-app.setting
+
+# Kotlin 编译缓存
+**/build
+**/out
+
+# 本地设置
+.idea/caches/
+/.idea/libraries/
+/.idea/shelf/
+/.idea/codeStyles/
+/.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/httpRequests
+.idea/markdown-navigator.xml
+.idea/dictionaries
+.idea/vcs.xml
+
+# 本地 Gradle 配置文件
+gradle.properties
+
+# 运行时文件
+*.log
+crashlytics.properties
+crashlytics-build.properties
+
+# Proguard
+proguard/
+
+# NDK
+/obj/
+.externalNativeBuild/
+
+# lint
+**/lint/reports/
+**/lint/results/
+**/lint/intermediates/
+
+# IntelliJ
+*.ipr
+*.iws
+*.idea/
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# 编译缓存
+.idea/
+.gradle/
+local.properties
+/.gradle/
+**/*.iml
+.idea/workspace.xml
+.idea/libraries/
+.DS_Store
+
+# 日志文件
+*.log
+
+# keystore
+*.keystore
+*.jks
+
